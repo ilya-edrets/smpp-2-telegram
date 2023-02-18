@@ -10,13 +10,26 @@ namespace WorkerHost
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
-            var host = Host.CreateDefaultBuilder(args)
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureAppConfiguration(ConfigureAppConfiguration)
                 .ConfigureServices(ConfigureServices)
                 .Build();
 
             host.Run();
+        }
+
+        private static void ConfigureAppConfiguration(HostBuilderContext context, IConfigurationBuilder builder)
+        {
+            var env = context.HostingEnvironment;
+
+            builder
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.local.json", optional: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
         }
 
         private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
