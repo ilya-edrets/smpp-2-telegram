@@ -43,28 +43,35 @@ namespace WorkerHost
 
         private async Task UpdateHandler(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (!this.IsMessageUpdate(update)
-             || !this.IsAuthorized(update)
-             || !this.IsNotEmptyMessage(update))
+            try
             {
-                return;
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!this.IsMessageUpdate(update)
+                    || !this.IsAuthorized(update)
+                    || !this.IsNotEmptyMessage(update))
+                {
+                    return;
+                }
+
+                this.logger.LogInformation("Chat id: {chatId}, ThreadId: {messageThreadId}, Message: {message}", update.Message!.Chat.Id, update.Message.MessageThreadId, update.Message.Text);
+
+                var response = await this.CallController(update, cancellationToken);
+
+                if (response != null)
+                {
+                    await client.SendTextMessageAsync(update.Message.Chat.Id, response, update.Message.MessageThreadId, cancellationToken: cancellationToken);
+                }
             }
-
-            this.logger.LogInformation("Chat id: {chatId}, ThreadId: {messageThreadId}, Message: {message}", update.Message!.Chat.Id, update.Message.MessageThreadId, update.Message.Text);
-
-            var response = await this.CallController(update, cancellationToken);
-
-            if (response != null)
+            catch (Exception e)
             {
-                await client.SendTextMessageAsync(update.Message.Chat.Id, response, update.Message.MessageThreadId, cancellationToken: cancellationToken);
+                this.logger.LogError(e, "Unknown exception was raised");
             }
         }
 
         private Task PollingErrorHandler(ITelegramBotClient client, Exception exception, CancellationToken cancellationToken)
         {
-            this.logger.LogError(exception, "Unknown error is raised");
+            this.logger.LogError(exception, "Unknown exception was raised");
             return Task.CompletedTask;
         }
 
@@ -87,6 +94,22 @@ namespace WorkerHost
         {
             var message = update.Message!.Text!;
 
+            if (message.StartsWith("/help", StringComparison.OrdinalIgnoreCase))
+            {
+                return @"
+                    Supported commands:
+                    /help - this message
+                    /getchannels - get all available smpp channels
+                    /assignchannel - assign selected channel to the current chat
+                    /setnumber - set phone number to the current thread
+
+                    Debug:
+                    /currentthread - get current thread id
+                    /allnumbers - get all known phone number with associated thread ids
+                ".AlignFromFirstLine()
+                 .AsTask<string?>();
+            }
+
             if (message.StartsWith("/getchannels", StringComparison.OrdinalIgnoreCase))
             {
                 return this.controller.GetAllChannels(cancellationToken).AsNullable();
@@ -97,11 +120,33 @@ namespace WorkerHost
                 var splits = message.Split(' ');
                 if (splits.Length != 2 || !int.TryParse(splits[1], out var channel))
                 {
-                    this.logger.LogError("Incorrect format of /assign-channel command: {message}", message);
+                    this.logger.LogError("Incorrect format of /assignchannel command: {message}", message);
                     return "Incorrect format of /assign-channel command".AsTask<string?>();
                 }
 
                 return this.controller.AssignChannel(update.Message.Chat.Id, channel, cancellationToken).AsNullable();
+            }
+
+            if (message.StartsWith("/setnumber", StringComparison.OrdinalIgnoreCase))
+            {
+                var splits = message.Split(' ');
+                if (splits.Length != 2)
+                {
+                    this.logger.LogError("Incorrect format of /setnumber command: {message}", message);
+                    return "Incorrect format of /setnumber command".AsTask<string?>();
+                }
+
+                return this.controller.SetPhoneNumber(update.Message.Chat.Id, update.Message.MessageThreadId, splits[1], cancellationToken).AsNullable();
+            }
+
+            if (message.StartsWith("/currentthread", StringComparison.OrdinalIgnoreCase))
+            {
+                return this.controller.GetCurrentThreadInfo(update.Message.Chat.Id, update.Message.MessageThreadId, cancellationToken).AsNullable();
+            }
+
+            if (message.StartsWith("/allnumbers", StringComparison.OrdinalIgnoreCase))
+            {
+                return this.controller.GetAllPhoneNumbers(cancellationToken).AsNullable();
             }
 
             return this.controller.SendMessage(update.Message.Chat.Id, update.Message.MessageThreadId, message, cancellationToken);
