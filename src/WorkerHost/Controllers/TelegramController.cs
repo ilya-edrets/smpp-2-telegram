@@ -1,5 +1,7 @@
-﻿using System.Threading;
+﻿using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using WorkerHost.Interfaces;
 
@@ -7,25 +9,38 @@ namespace WorkerHost.Controllers
 {
     public class TelegramController : ITelegramController
     {
+        private readonly IChannelManager channelManager;
         private readonly ILogger<TelegramController> logger;
 
-        public TelegramController(ILogger<TelegramController> logger)
+        public TelegramController(IChannelManager channelManager, ILogger<TelegramController> logger)
         {
+            this.channelManager = channelManager;
             this.logger = logger;
         }
 
-        public Task<string> GetAllChannels(CancellationToken cancellationToken)
+        public async Task<string> GetAllChannels(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return Task.FromResult("channels");
+            var channels = await this.channelManager.GetChannels(cancellationToken);
+
+            var sb = new StringBuilder();
+            foreach (var smppChannel in channels)
+            {
+                var assignedPart = smppChannel.TelegramChat != null ? $"is assigned to chat {smppChannel.TelegramChat.Id}" : "is not assigned";
+                sb.AppendLine($"Channel '{smppChannel.Name ?? "unnamed"}' (id:{smppChannel.Id}) {assignedPart}");
+            }
+
+            return sb.ToString();
         }
 
-        public Task<string> AssignChannel(long chatId, int channel, CancellationToken cancellationToken)
+        public async Task<string> AssignChannel(long chatId, int channelId, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            return Task.FromResult($"SMPP channel {channel} is assigned to chat {chatId}");
+            await this.channelManager.AssignChannel(chatId, channelId, cancellationToken);
+
+            return "Done";
         }
 
         public Task<string?> SendMessage(long chatId, int? threadId, string message, CancellationToken cancellationToken)

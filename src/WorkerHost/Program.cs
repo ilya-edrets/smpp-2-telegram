@@ -1,4 +1,7 @@
 using System;
+using Core;
+using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,11 +37,17 @@ namespace WorkerHost
 
         private static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
         {
-            var telegramConfiguration = context.Configuration.GetSection("Telegram").Get<TelegramConfiguration>() ?? throw new ArgumentNullException(nameof(TelegramConfiguration));
+            var config = context.Configuration;
 
-            services.AddSingleton<ITelegramController, TelegramController>();
+            var telegramConfiguration = config.GetSection("Telegram").Get<TelegramConfiguration>() ?? throw new ArgumentNullException("telegramConfiguration");
+            var connectionString = config.GetConnectionString("DefaultConnection") ?? throw new ArgumentNullException("connectionString");
+
+            services.AddScoped<IChannelManager, ChannelManager>();
+            services.AddScoped<ITelegramController, TelegramController>();
             services.AddSingleton<TelegramConfiguration>(telegramConfiguration);
             services.AddHostedService<TelegramWorker>();
+
+            services.AddDbContext<ApplicationDbContext>(builder => builder.UseSqlite(connectionString));
         }
     }
 }

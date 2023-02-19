@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
@@ -15,13 +16,13 @@ namespace WorkerHost
 {
     public class TelegramWorker : IHostedService
     {
-        private readonly ITelegramController controller;
+        private readonly IServiceProvider serviceProvider;
         private readonly TelegramConfiguration configuration;
         private readonly ILogger<TelegramWorker> logger;
 
-        public TelegramWorker(ITelegramController controller, TelegramConfiguration configuration, ILogger<TelegramWorker> logger)
+        public TelegramWorker(IServiceProvider serviceProvider, TelegramConfiguration configuration, ILogger<TelegramWorker> logger)
         {
-            this.controller = controller;
+            this.serviceProvider = serviceProvider;
             this.configuration = configuration;
             this.logger = logger;
         }
@@ -58,7 +59,7 @@ namespace WorkerHost
 
                 var response = await this.CallController(update, cancellationToken);
 
-                if (response != null)
+                if (!string.IsNullOrWhiteSpace(response))
                 {
                     await client.SendTextMessageAsync(update.Message.Chat.Id, response, update.Message.MessageThreadId, cancellationToken: cancellationToken);
                 }
@@ -92,6 +93,9 @@ namespace WorkerHost
 
         private Task<string?> CallController(Update update, CancellationToken cancellationToken)
         {
+            using var scope = this.serviceProvider.CreateScope();
+            var controller = scope.ServiceProvider.GetRequiredService<ITelegramController>();
+
             var message = update.Message!.Text!;
 
             if (message.StartsWith("/help", StringComparison.OrdinalIgnoreCase))
@@ -112,7 +116,7 @@ namespace WorkerHost
 
             if (message.StartsWith("/getchannels", StringComparison.OrdinalIgnoreCase))
             {
-                return this.controller.GetAllChannels(cancellationToken).AsNullable();
+                return controller.GetAllChannels(cancellationToken).AsNullable();
             }
 
             if (message.StartsWith("/assignchannel", StringComparison.OrdinalIgnoreCase))
@@ -124,7 +128,7 @@ namespace WorkerHost
                     return "Incorrect format of /assign-channel command".AsTask<string?>();
                 }
 
-                return this.controller.AssignChannel(update.Message.Chat.Id, channel, cancellationToken).AsNullable();
+                return controller.AssignChannel(update.Message.Chat.Id, channel, cancellationToken).AsNullable();
             }
 
             if (message.StartsWith("/setnumber", StringComparison.OrdinalIgnoreCase))
@@ -136,20 +140,20 @@ namespace WorkerHost
                     return "Incorrect format of /setnumber command".AsTask<string?>();
                 }
 
-                return this.controller.SetPhoneNumber(update.Message.Chat.Id, update.Message.MessageThreadId, splits[1], cancellationToken).AsNullable();
+                return controller.SetPhoneNumber(update.Message.Chat.Id, update.Message.MessageThreadId, splits[1], cancellationToken).AsNullable();
             }
 
             if (message.StartsWith("/currentthread", StringComparison.OrdinalIgnoreCase))
             {
-                return this.controller.GetCurrentThreadInfo(update.Message.Chat.Id, update.Message.MessageThreadId, cancellationToken).AsNullable();
+                return controller.GetCurrentThreadInfo(update.Message.Chat.Id, update.Message.MessageThreadId, cancellationToken).AsNullable();
             }
 
             if (message.StartsWith("/allnumbers", StringComparison.OrdinalIgnoreCase))
             {
-                return this.controller.GetAllPhoneNumbers(cancellationToken).AsNullable();
+                return controller.GetAllPhoneNumbers(cancellationToken).AsNullable();
             }
 
-            return this.controller.SendMessage(update.Message.Chat.Id, update.Message.MessageThreadId, message, cancellationToken);
+            return controller.SendMessage(update.Message.Chat.Id, update.Message.MessageThreadId, message, cancellationToken);
         }
     }
 }
