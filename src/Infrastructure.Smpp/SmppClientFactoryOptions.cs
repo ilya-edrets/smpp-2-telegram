@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using Infrastructure.Smpp.Configuration;
+﻿using Infrastructure.Smpp.Configuration;
 
-namespace Infrastructure.Smpp
+namespace Infrastructure.Smpp;
+
+public class SmppClientFactoryOptions
 {
-    public class SmppClientFactoryOptions
-    {
-        public Dictionary<int, SmppChannelConfiguration> SmppChannelConfigurations { get; } = new();
-    }
+    public Dictionary<int, SmppChannelConfiguration> SmppChannelConfigurations { get; } = new();
 }

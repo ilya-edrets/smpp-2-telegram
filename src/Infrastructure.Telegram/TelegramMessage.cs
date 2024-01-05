@@ -1,7 +1,6 @@
-﻿namespace Infrastructure.Telegram
+﻿namespace Infrastructure.Telegram;
+
+public record TelegramMessage(long ChatId, int? ThreadId, string Message)
 {
-    public record TelegramMessage(long ChatId, int? ThreadId, string Message)
-    {
-        public static readonly TelegramMessage EmptyMessage = new(default, default, string.Empty);
-    }
+    public static readonly TelegramMessage EmptyMessage = new(default, default, string.Empty);
 }

@@ -1,7 +1,6 @@
-﻿namespace Infrastructure.Smpp.Abstractions
+﻿namespace Infrastructure.Smpp.Abstractions;
+
+public interface ISmppClientFactory
 {
-    public interface ISmppClientFactory
-    {
-        ISmppClient GetSmppClient(int channelId);
-    }
+    ISmppClient GetSmppClient(int channelId);
 }

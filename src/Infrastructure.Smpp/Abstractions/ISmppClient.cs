@@ -1,12 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+namespace Infrastructure.Smpp.Abstractions;
 
-namespace Infrastructure.Smpp.Abstractions
+public interface ISmppClient
 {
-    public interface ISmppClient
-    {
-        IObservable<SmppMessage> Messages { get; }
+    IObservable<SmppMessage> Messages { get; }
 
-        Task SendMessage(SmppMessage message);
-    }
+    Task SendMessageAsync(SmppMessage message);
 }

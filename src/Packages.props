@@ -16,9 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" version="6.0.0" />
+    <PackageReference Update="Microsoft.VisualStudio.Threading.Analyzers" version="17.5.22" />
+    <PackageReference Update="StyleCop.Analyzers" version="1.2.0-beta.406" />
+    <PackageReference Update="Roslynator.Analyzers" version="4.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="JamaaSMPP" Version="1.10.0" />
     <PackageReference Update="Telegram.Bot" Version="19.0.0-preview.2" />
-    <PackageReference Update="StyleCop.Analyzers" Version="1.2.0-beta.435" />
+    <PackageReference Update="Serilog" Version="3.1.1" />
+    <PackageReference Update="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Update="Serilog.Extensions.Logging" Version="7.0.0" />
   </ItemGroup>
 
 </Project>

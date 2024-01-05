@@ -1,16 +1,14 @@
-﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Shared
+namespace Shared;
+
+public static class Guard
 {
-    public static class Guard
+    public static void NotNull([NotNull] object? obj, string paramName)
     {
-        public static void NotNull([NotNull] object? obj, string paramName)
+        if (obj == null)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(paramName);
-            }
+            throw new ArgumentNullException(paramName);
         }
     }
 }
