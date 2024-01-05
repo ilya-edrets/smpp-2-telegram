@@ -31,7 +31,7 @@ public class Program
 
         var smppChannelConfiguration = configuration.GetSection(nameof(SmppChannelConfiguration)).Get<SmppChannelConfiguration>()!;
         var telegramBotConfiguration = configuration.GetSection(nameof(TelegramBotConfiguration)).Get<TelegramBotConfiguration>()!;
-        var telegramConverstaionConfiguration = configuration.GetSection(nameof(TelegramConverstaionConfiguration)).Get<TelegramConverstaionConfiguration>()!;
+        var telegramConversationConfiguration = configuration.GetSection(nameof(TelegramConversationConfiguration)).Get<TelegramConversationConfiguration>()!;
 
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.AddSerilog(dispose: true).AddConsole());
@@ -51,7 +51,7 @@ public class Program
             logger.LogInformation("Received an icoming sms from: {Sender} with text: {Text}", smppMessage.Sender, smppMessage.Message);
 
             var message = $"{smppMessage.Sender}\n\n{smppMessage.Message}";
-            var telegramMessage = new TelegramMessage(telegramConverstaionConfiguration.ChatId, telegramConverstaionConfiguration.ThreadId, message);
+            var telegramMessage = new TelegramMessage(telegramConversationConfiguration.ChatId, telegramConversationConfiguration.ThreadId, message);
             telegramClient.SendMessageAsync(telegramMessage).ContinueWith(
                 result =>
                 {
@@ -69,7 +69,7 @@ public class Program
 
         logger.LogInformation("Application has been successfully started");
         logger.LogInformation("SMPP Endpoint: {Host}:{Port}", smppChannelConfiguration.Host, smppChannelConfiguration.Port);
-        logger.LogInformation("Telegram ChatId: {ChatId}", telegramConverstaionConfiguration.ChatId);
+        logger.LogInformation("Telegram ChatId: {ChatId}", telegramConversationConfiguration.ChatId);
 
         Console.WriteLine("Press any key to stop");
         Console.ReadLine();

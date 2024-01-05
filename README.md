@@ -6,7 +6,7 @@ The main purpose of this project is to provide an ability to receive and send sm
 
 The application can connect to SMPP host, receive incoming SMS and send it to Telegram Chat.
 
-## Prerequsits
+## Prerequisites
 
 Before you start you need working SMPP server and created Telegram Bot which will send you incoming SMS.
 
@@ -26,7 +26,7 @@ Before you start you need working SMPP server and created Telegram Bot which wil
 - Token - the token from @BotFather
 - Owner - account name of creator without '@'
 
-### TelegramConverstaionConfiguration
+### TelegramConversationConfiguration
 
 - ChatId - chat id as signed long. It can be a private chat with the bot or any group where the bot was added.
 - ThreadId - optional signed long id if threads are enabled in the current chat
