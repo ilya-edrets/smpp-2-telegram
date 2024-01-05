@@ -17,7 +17,7 @@ namespace WorkerHost;
 
 public class Program
 {
-    public static void Main()
+    public static Task Main()
     {
         var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 
@@ -71,7 +71,7 @@ public class Program
         logger.LogInformation("SMPP Endpoint: {Host}:{Port}", smppChannelConfiguration.Host, smppChannelConfiguration.Port);
         logger.LogInformation("Telegram ChatId: {ChatId}", telegramConversationConfiguration.ChatId);
 
-        Console.WriteLine("Press any key to stop");
-        Console.ReadLine();
+        Console.WriteLine("Press Ctrl+C to stop the application");
+        return Task.Delay(Timeout.Infinite);
     }
 }

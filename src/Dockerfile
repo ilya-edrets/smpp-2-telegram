@@ -5,14 +5,12 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["WorkerHost/WorkerHost.csproj", "WorkerHost/"]
-RUN dotnet restore "WorkerHost/WorkerHost.csproj"
 COPY . .
-WORKDIR "/src/WorkerHost"
-RUN dotnet build "WorkerHost.csproj" -c Release -o /app/build
+RUN dotnet restore "WorkerHost/WorkerHost.csproj"
+RUN dotnet build "WorkerHost/WorkerHost.csproj" --no-restore -c Release
 
 FROM build AS publish
-RUN dotnet publish "WorkerHost.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "WorkerHost/WorkerHost.csproj" --no-restore --no-build -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

@@ -30,3 +30,43 @@ Before you start you need working SMPP server and created Telegram Bot which wil
 
 - ChatId - chat id as signed long. It can be a private chat with the bot or any group where the bot was added.
 - ThreadId - optional signed long id if threads are enabled in the current chat
+
+## Run in Docker
+
+In src folder
+
+``` bash
+docker build -t smpp-2-telegram .
+```
+
+Then create compose yaml
+
+``` yaml
+version: "3.9"
+
+name: "smpp-2-telegram"
+      
+services:
+  apphost:
+    container_name: smpp-2-telegram
+    image: smpp-2-telegram:latest
+    hostname: apphost
+    restart: unless-stopped
+    environment:
+      - SmppChannelConfiguration__ChannelId=1
+      - SmppChannelConfiguration__Host=localhost
+      - SmppChannelConfiguration__Port=1234
+      - SmppChannelConfiguration__SystemId=login
+      - SmppChannelConfiguration__Password=password
+      - TelegramBotConfiguration__Name=incoming sms
+      - TelegramBotConfiguration__Token=Token:Token
+      - TelegramBotConfiguration__Owner=owner
+      - TelegramConversationConfiguration__ChatId=123456
+    network_mode: "host"
+```
+
+Then up the compose
+
+``` bash
+docker compose up -d
+```
